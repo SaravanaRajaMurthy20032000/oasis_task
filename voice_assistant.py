@@ -1,6 +1,6 @@
 import speech_recognition as sr
 import pyttsx3 as pt
-import wikipedia
+import wikipedia, webbrowser
 import datetime as dt
 
 def speak(audio):
@@ -12,7 +12,7 @@ def speak(audio):
 
 def tell_me():
     hr = int(dt.datetime.now().hour)
-    if hr>=0 and hr<=12:
+    if hr>=0 and hr<12:
         speak("Good Morning")
     elif hr>=12 and hr<=18:
         speak("Good Afternoon")
@@ -27,37 +27,44 @@ def take_cmd():
         audio = rec.listen(main)
     
     try:
-        query = rec.recognize_google(audio)
+        query = rec.recognize_google(audio).lower()
         print("You said: ",query)
-        if 'stop the program' in query:
-            print("Ending the program")
+        if 'hey jarvis' in query:
+            speak('Hello, how can i help u?')
+        elif 'how are you' in query:
+            speak('Im doing well thank you!')
+        elif 'end program' in query:
+            speak('good bye,see you soon!')
             exit()
-        
+        return query
     except sr.UnknownValueError:
-        # print("Sorry could not understand the audio!")
-        speak("Sorry could not understand the audio! say it again please!")
-        # return None
-    except sr.RequestError as e:
-        print("Couldn't request results! sorry ,{0}", e)
+        speak("Sorry I couldn't understand your voice!")
         return None
-    return query
 
+def search_wiki(command):
+    try:
+        result = wikipedia.summary(command, sentences=2)
+        return result
+    except wikipedia.exceptions.PageError as e:
+        print(f"Page not found. Please try a different query. {e}")
+        return None
+
+def main():
+    command = take_cmd()
+    if command:
+        wiki_cmd = search_wiki(command)
+        if wiki_cmd:
+            speak(wiki_cmd)
+            print(wiki_cmd)
 
 if __name__ == '__main__':
     tell_me()
-    speak("I'm your voice assistant Jarvis, how can I help U?")
+    speak("I'm your voice assistant Jarvis, how can I assist U?")
     while True:
-        qry = take_cmd().lower()
-        if 'what\'s the time' in qry:
+        main()
+        qry = take_cmd()
+        if 'The time' in qry.lower():
             time = dt.datetime.now().strftime('%H:%M:%S')
             speak(f"Sir the time is {time}")
-        elif 'wikipedia' in qry:
-            speak('Searching Wikipedia...')
-            query = query.replace("wikipedia", "")
-            results = wikipedia.summary(query) 
-            speak("According to Wikipedia")
-            print(results)
-            speak(results)
-
-
-
+        elif 'open google' in qry.lower():
+            webbrowser.open('google.com')
